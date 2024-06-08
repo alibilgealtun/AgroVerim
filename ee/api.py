@@ -15,7 +15,17 @@ def recommend():
     lat, lon = get_lat_lon(city, None)
     all_data = get_all_data(lat, lon)
     recommendations = recommend_crops(all_data, cp)
-    return jsonify(recommendations)
+                                      
+    air_quality = all_data['air_quality']
+    temperature = all_data['climate_data']['temperature']
+    
+    response = {
+        'recommendations': recommendations,
+        'air_quality': air_quality,
+        'temperature': temperature
+    }
+    
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(debug=True)
