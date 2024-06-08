@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sürdürülebilir Tarım Platformu</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">TarımPlatformu</div>
+            <ul>
+                <li><a href="#home">Anasayfa</a></li>
+                <li><a href="#features">Özellikler</a></li>
+                <li><a href="#education">Eğitim Modülleri</a></li>
+                <li><a href="#contact">İletişim</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <section id="home">
+        <div class="hero">
+            <h1>Sürdürülebilir Tarım Platformuna Hoş Geldiniz</h1>
+            <p>Çiftçilere sürdürülebilir tarım tekniklerini öğretmek için buradayız.</p>
+            <a href="#features" class="cta">Daha Fazla Bilgi</a>
+        </div>
+    </section>
+    
+    <section id="features">
+        <h2>Özellikler</h2>
+        <div class="features-container">
+            <div class="feature">
+                <h3>Eğitim Modülleri</h3>
+                <p>Online videolar, makaleler ve interaktif içeriklerle öğrenin.</p>
+            </div>
+            <div class="feature">
+                <h3>Danışmanlık ve Destek</h3>
+                <p>Uzmanlarla birebir danışmanlık ve 7/24 destek.</p>
+            </div>
+            <div class="feature">
+                <h3>Veri Analizi ve İzleme</h3>
+                <p>Topladığınız verileri analiz edin ve özelleştirilmiş tavsiyeler alın.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section id="education">
+        <h2>Eğitim Modülleri</h2>
+        <div class="education-container">
+            <div class="module">
+                <h3>Organik Tarım</h3>
+                <p>Organik tarım tekniklerini öğrenin ve uygulayın.</p>
+            </div>
+            <div class="module">
+                <h3>Su Yönetimi</h3>
+                <p>Su kullanımını optimize etmek için yöntemler.</p>
+            </div>
+            <div class="module">
+                <h3>Toprak Sağlığı</h3>
+                <p>Toprak sağlığını iyileştirme teknikleri.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section id="contact">
+        <h2>İletişim</h2>
+        <form action="/submit" method="post">
+            <label for="name">Adınız:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="message">Mesaj:</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+            <button type="submit">Gönder</button>
+        </form>
+    </section>
+    
+    <footer>
+        <p>&copy; 2024 Sürdürülebilir Tarım Platformu. Tüm hakları saklıdır.</p>
+    </footer>
+</body>
+</html>
