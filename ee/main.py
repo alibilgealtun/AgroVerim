@@ -111,16 +111,3 @@ def recommend_crops(data, crop_profiles):
         recommendations.append(crop)
     
     return recommendations
-
-city = input("Enter the city: ")
-
-lat, lon = get_lat_lon(city, None)
-print(f'Your lat: {lat}, your lon: {lon} ')
-
-all_datas = get_all_data(lat, lon)
-
-for i,j  in all_datas.items():
-    print(f'{i}: {j}')
-recommends = recommend_crops(all_datas,cp )
-
-print(recommends)

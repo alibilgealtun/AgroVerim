@@ -1,11 +1,11 @@
 crop_profiles = {
-    'Wheat': {
+    'Buğday': {
         'temperature': (10, 24),  # Optimal temperature range in Celsius
         'rainfall': (50, 900),   # Optimal rainfall in mm per year
         'ph': (6, 7.5),           # Optimal soil pH
         'organic_carbon': (1, 2.5) # Optimal organic carbon in percentage
     },
-    'Corn': {
+    'Mısır': {
         'temperature': (18, 27),
         'rainfall': (500, 800),
         'ph': (5.8, 7),
