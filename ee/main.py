@@ -1,282 +1,126 @@
+import requests
+from crop_profile import crop_profiles as cp
+from city import get_lat_lon 
+from keys import OPENWEATHER_API_KEY as api_key, MET_API_KEY as met_api_key
+from datetime import datetime
+from meteostat import Point,Daily
 
-import ee
-ee.Authenticate()
-ee.Initialize(project='ee-alialttun')
-
-import folium
-
-def deforestation_monitoring(coordinates):
-    try:
-        if len(coordinates) < 3:
-            raise ValueError("Polygon requires at least 3 points.")
-        
-        aoi = ee.Geometry.Polygon([coordinates])
-        
-        collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
-            .filterDate('2015-01-01', '2020-12-31') \
-            .filterBounds(aoi)
-        
-        image = collection.median()
-        
-        ndvi = image.normalizedDifference(['B5', 'B4']).rename('NDVI')
-        
-        ndvi_params = {
-            'min': 0,
-            'max': 1,
-            'palette': ['brown', 'green']
+def get_air_quality(lat, lon):
+    url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={api_key}"
+    response = requests.get(url)
+    data = response.json()
+    
+    if 'list' in data and len(data['list']) > 0:
+        air_quality = {
+            'pm2_5': data['list'][0]['components']['pm2_5'],
+            'pm10': data['list'][0]['components']['pm10'],
+            'o3': data['list'][0]['components']['o3'],
+            'no2': data['list'][0]['components']['no2']
         }
-        
-        map_id_dict = ee.Image(ndvi).clip(aoi).getMapId(ndvi_params)
-        return map_id_dict
-    except Exception as e:
-        return str(e)
-     
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load Landsat image collections
-    collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
-        .filterDate('2015-01-01', '2020-12-31') \
-        .filterBounds(aoi)
-    
-    # Select the median image
-    image = collection.median()
-    
-    # Calculate NDVI
-    ndvi = image.normalizedDifference(['B5', 'B4']).rename('NDVI')
-    
-    # Define visualization parameters
-    ndvi_params = {
-        'min': 0,
-        'max': 1,
-        'palette': ['brown', 'green']
-    }
-    
-    # Visualize NDVI
-    ndvi_map = ee.Image(ndvi).clip(aoi)
-    url = ndvi_map.getThumbUrl(ndvi_params)
-    
-    return "Deforestation Monitoring NDVI map URL: " + url
-
-
-
-def air_quality_analysis(coordinates):
-    ee.Initialize()
-    
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load Sentinel-5P NO2 data
-    collection = ee.ImageCollection('COPERNICUS/S5P/NRTI/L3_NO2') \
-        .filterDate('2020-01-01', '2020-12-31') \
-        .filterBounds(aoi)
-    
-    # Select the median image
-    image = collection.median()
-    
-    # Define visualization parameters
-    no2_params = {
-        'min': 0,
-        'max': 0.0002,
-        'palette': ['blue', 'green', 'yellow', 'red']
-    }
-    
-    # Visualize NO2
-    no2_map = image.select('tropospheric_NO2_column_number_density').clip(aoi)
-    url = no2_map.getThumbUrl(no2_params)
-    
-    return "Air Quality NO2 map URL: " + url
-
-
-def water_quality_monitoring(coordinates):
-    ee.Initialize()
-    
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load Landsat image collections
-    collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
-        .filterDate('2020-01-01', '2020-12-31') \
-        .filterBounds(aoi)
-    
-    # Select the median image
-    image = collection.median()
-    
-    # Calculate NDWI
-    ndwi = image.normalizedDifference(['B3', 'B5']).rename('NDWI')
-    
-    # Define visualization parameters
-    ndwi_params = {
-        'min': -1,
-        'max': 1,
-        'palette': ['brown', 'blue']
-    }
-    
-    # Visualize NDWI
-    ndwi_map = ee.Image(ndwi).clip(aoi)
-    url = ndwi_map.getThumbUrl(ndwi_params)
-    
-    return "Water Quality NDWI map URL: " + url
-
-def urban_heat_island(coordinates):
-    ee.Initialize()
-    
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load Landsat image collections
-    collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
-        .filterDate('2020-06-01', '2020-08-31') \
-        .filterBounds(aoi)
-    
-    # Select the median image
-    image = collection.median()
-    
-    # Calculate land surface temperature (LST)
-    lst = image.select('B10').multiply(0.1).subtract(273.15).rename('LST')
-    
-    # Define visualization parameters
-    lst_params = {
-        'min': 20,
-        'max': 40,
-        'palette': ['blue', 'green', 'red']
-    }
-    
-    # Visualize LST
-    lst_map = ee.Image(lst).clip(aoi)
-    url = lst_map.getThumbUrl(lst_params)
-    
-    return "Urban Heat Island LST map URL: " + url
-
-
-def carbon_sequestration(coordinates):
-    ee.Initialize()
-    
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load biomass dataset
-    biomass = ee.Image('NASA/ORNL/biomass_carbon_density/v1')
-    
-    # Clip the image to AOI
-    biomass_clipped = biomass.clip(aoi)
-    
-    # Define visualization parameters
-    biomass_params = {
-        'min': 0,
-        'max': 100,
-        'palette': ['yellow', 'green', 'darkgreen']
-    }
-    
-    # Visualize biomass
-    url = biomass_clipped.getThumbUrl(biomass_params)
-    
-    return "Carbon Sequestration map URL: " + url
-
-
-def agricultural_monitoring(coordinates):
-    ee.Initialize()
-    
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load Landsat image collections
-    collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR') \
-        .filterDate('2020-05-01', '2020-09-30') \
-        .filterBounds(aoi)
-    
-    # Select the median image
-    image = collection.median()
-    
-    # Calculate NDVI
-    ndvi = image.normalizedDifference(['B5', 'B4']).rename('NDVI')
-    
-    # Define visualization parameters
-    ndvi_params = {
-        'min': 0,
-        'max': 1,
-        'palette': ['brown', 'green']
-    }
-    
-    # Visualize NDVI
-    ndvi_map = ee.Image(ndvi).clip(aoi)
-    url = ndvi_map.getThumbUrl(ndvi_params)
-    
-    return "Agricultural Monitoring NDVI map URL: " + url
-
-def disaster_response(coordinates):
-    ee.Initialize()
-    
-    # Define an area of interest (AOI) based on input coordinates
-    aoi = ee.Geometry.Polygon([coordinates])
-    
-    # Load MODIS fire data
-    collection = ee.ImageCollection('MODIS/006/MCD14DL') \
-        .filterDate('2020-01-01', '2020-12-31') \
-        .filterBounds(aoi)
-    
-    # Select the median image
-    image = collection.median()
-    
-    # Define visualization parameters
-    fire_params = {
-        'min': 0,
-        'max': 1,
-        'palette': ['black', 'red', 'yellow']
-    }
-    
-    # Visualize fire data
-    fire_map = image.clip(aoi)
-    url = fire_map.getThumbUrl(fire_params)
-    
-    return "Disaster Response Fire map URL: " + url
-
-
-def main():
-    print("Select a project to run:")
-    print("1. Deforestation Monitoring")
-    print("2. Air Quality Analysis")
-    print("3. Water Quality Monitoring")
-    print("4. Urban Heat Island Effect")
-    print("5. Carbon Sequestration")
-    print("6. Agricultural Monitoring")
-    print("7. Disaster Response and Management")
-    
-    choice = int(input("Enter the number of the project: "))
-    coordinates = input("Enter coordinates as a list of lists (e.g., [[-60.0, -10.0], [-60.0, -12.0], [-58.0, -12.0], [-58.0, -10.0]]): ")
-    coordinates = eval(coordinates)  # Evaluate the input string to convert it into a list of lists
-    try:
-        map_id_dict = None
-        if choice == 1:
-            map_id_dict = deforestation_monitoring(coordinates)
-        elif choice == 2:
-            result = air_quality_analysis(coordinates)
-        elif choice == 3:
-            result = water_quality_monitoring(coordinates)
-        elif choice == 4:
-            result = urban_heat_island(coordinates)
-        elif choice == 5:
-            result = carbon_sequestration(coordinates)
-        elif choice == 6:
-            result = agricultural_monitoring(coordinates)
-        elif choice == 7:
-            result = disaster_response(coordinates)
-        else:
-            result = "Invalid choice."
-        print(result)
-    except:
-       print("Error. Coordinates are wrong.")
-
-
-    if isinstance(map_id_dict, dict):
-        map = create_folium_map(map_id_dict, coordinates)
-        map.save('map.html')
-        print("Map has been saved to 'map.html'")
     else:
-        print(map_id_dict)
+        print(f"Error: Unexpected air quality data format: {data}")
+        air_quality = {
+            'pm2_5': None,
+            'pm10': None,
+            'o3': None,
+            'no2': None
+        }
+    return air_quality
 
-if __name__ == "__main__":
-    main()
+def get_soil_data(lat, lon):
+    url = f"https://rest.isric.org/soilgrids/v2.0/properties/query?lat={lat}&lon={lon}"
+    headers = {
+        'accept': 'application/json',
+    }
+    response = requests.get(url, headers=headers)
+    data = response.json()
+
+    # Extracting pH (phh2o) and organic carbon (ocd) data
+    pH = None
+    organic_carbon = None
+
+    if 'properties' in data:
+        layers = data['properties']['layers']
+        for layer in layers:
+            if layer['name'] == 'phh2o':
+                pH = layer['depths'][0]['values']['mean']
+            elif layer['name'] == 'ocd':
+                organic_carbon = layer['depths'][0]['values']['mean']
+
+    soil_data = {
+        'organic_carbon': None,
+        'pH': 7
+    }
+
+    return soil_data
+
+def get_climate_data(lat, lon):
+    start = datetime(2018, 1, 1)
+    end = datetime(2018, 12, 31)
+
+    # Create Point for Vancouver, BC
+    location = Point(lat, lon)
+
+    # Get daily data for 2018
+    data = Daily(location, start, end)
+    data = data.fetch()
+    tavg_mean = data['tavg'].mean()
+
+    climate_data = {
+        'temperature' : round(tavg_mean,2)
+    }
+    return climate_data
 
 
+def get_all_data(lat, lon):
+    air_quality = get_air_quality(lat, lon)
+    soil_data = get_soil_data(lat, lon)
+    climate_data = get_climate_data(lat, lon)
+    
+    all_data = {
+        'air_quality': air_quality,
+        'soil_data': soil_data,
+       'climate_data': climate_data
+    }
+    return all_data
 
+
+def recommend_crops(data, crop_profiles):
+    recommendations = []
+    
+    for crop, profile in crop_profiles.items():
+        temp_min, temp_max = profile['temperature']
+        #rain_min, rain_max = profile['rainfall']
+        ph_min, ph_max = profile['ph']
+        carbon_min, carbon_max = profile['organic_carbon']
+        
+        temp = data['climate_data']['temperature']
+        #rain = data['climate_data']['rainfall']
+        ph = data['soil_data']['pH']
+        carbon = data['soil_data']['organic_carbon']
+        
+        if temp is not None and not (temp_min <= temp <= temp_max):
+           continue
+        #if rain is not None and not (rain_min <= rain <= rain_max):
+           # continue
+        if ph is not None and not (ph_min <= ph <= ph_max):
+            continue
+        if carbon is not None and not (carbon_min <= carbon <= carbon_max):
+            continue
+        
+        recommendations.append(crop)
+    
+    return recommendations
+
+city = input("Enter the city: ")
+
+lat, lon = get_lat_lon(city, None)
+print(f'Your lat: {lat}, your lon: {lon} ')
+
+all_datas = get_all_data(lat, lon)
+
+for i,j  in all_datas.items():
+    print(f'{i}: {j}')
+recommends = recommend_crops(all_datas,cp )
+
+print(recommends)
